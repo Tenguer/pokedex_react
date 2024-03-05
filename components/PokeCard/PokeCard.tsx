@@ -1,14 +1,15 @@
 import style from './PokeCard.module.css'
-import type {PokemonApi} from '../CardList/CardList'
 
 type PokeCardProps = {
-  pokemon: PokemonApi
+  name: string
+  image?: string
 }
 
-export default function PokeCard({pokemon}: PokeCardProps) {
+export default function PokeCard({name, image}: PokeCardProps) {
   return (
-   <li className={style.pokeCard}>
-    {pokemon.name}
+    <li className={style.card}>
+      <p className={style.name}>{name}</p>
+      {/* <img src={image} alt={name} className={style.img} /> */}
    </li>
   )
 }
