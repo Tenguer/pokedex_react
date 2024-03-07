@@ -1,52 +1,64 @@
 import { useEffect, useState } from "react";
 import Head from "next/head";
 import CardList from "../components/CardList/CardList";
-import type {Pokemon} from '../interface'
+import type { Pokemon } from "../interface";
 
 interface PokeApi {
-  name: string
-  url: string
+  name: string;
+  url: string;
 }
 
 export default function Pokedex() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
-  const [prevPage, setPrevPage] = useState('');
-  const [nextPage, setNextPage] = useState('');
-  const [curentPage, setCurentPage] = useState('https://pokeapi.co/api/v2/pokemon?limit=20&offset=0');
-  
+  const [pokemonsShow, setPokemonsShow] = useState<Pokemon[]>([]);
+  const [index, setIndex] = useState(0);
+  const urlLimit = 150;
+  const listByPage = 20;
+  const url = `https://pokeapi.co/api/v2/pokemon?limit=${urlLimit}&offset=0`;
+
+  const prevPage = () => {
+    if (index - listByPage >= 0) {
+      setIndex(index - listByPage);
+    } else {
+      setIndex(0);
+    }
+  };
+
+  const nextPage = () => {
+    if (index + listByPage <= urlLimit) {
+      setIndex(index + listByPage);
+    }
+  };
+
   useEffect(() => {
     const getPokemons = async () => {
-      const pokeApiResponse = await fetch(curentPage)
-        .then(res => res.json())
-        .then(data => {
-          setPrevPage(data.previous)
-          setNextPage(data.next)
-          return data.results
-        })
-        .catch(error => console.error(error));
-      
-        pokeApiResponse.forEach(async ({ name }: PokeApi) => {
-          await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
-            .then(res => res.json())
-            .then(data => setPokemons((poke) => [...poke, data]))
-            .catch(error => console.error(error));
-        });
+      const pokeApiResponse = await fetch(url)
+        .then((res) => res.json())
+        .then((data) => data.results)
+        .catch((error) => console.error(error));
+
+      pokeApiResponse.forEach(async ({ name }: PokeApi) => {
+        await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
+          .then((res) => res.json())
+          .then((data) => setPokemons((poke) => [...poke, data]))
+          .catch((error) => console.error(error));
+      });
+    };
+
+    if (pokemons.length === 0) {
+      getPokemons();
     }
+  }, [pokemons, url]);
 
-    getPokemons()
-  }, [curentPage])
+  useEffect(() => {
+    const pokeList = () => {
+      setPokemonsShow(pokemons.slice(index, index + listByPage));
+    };
 
-  const handleNext = () =>  {
-    setPokemons([])
-    setCurentPage(nextPage)
-  }
-
-  const handlePrev = () =>  {
-    if (prevPage !== null) {
-      setPokemons([])
-      setCurentPage(prevPage)
+    if (pokemons.length === urlLimit) {
+      pokeList();
     }
-  }
+  }, [index, pokemons]);
 
   return (
     <>
@@ -56,10 +68,10 @@ export default function Pokedex() {
 
       <h1>Hello, PokedexApp!</h1>
 
-      <CardList pokemons={pokemons} />
+      <CardList pokemons={pokemonsShow} />
       <div>
-        <button onClick={handlePrev}>Prev</button>
-        <button onClick={handleNext}>Next</button>
+        <button onClick={prevPage}>Prev</button>
+        <button onClick={nextPage}>Next</button>
       </div>
     </>
   );
