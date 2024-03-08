@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Head from "next/head";
 import CardList from "../components/CardList/CardList";
 import type { Pokemon } from "../interface";
+import Input from "../components/Input/Input";
 
 interface PokeApi {
   name: string;
@@ -11,6 +12,7 @@ interface PokeApi {
 export default function Pokedex() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
   const [pokemonsShow, setPokemonsShow] = useState<Pokemon[]>([]);
+  const [inputSearch, setInputSearch] = useState('');
   const [index, setIndex] = useState(0);
   const urlLimit = 150;
   const listByPage = 20;
@@ -30,6 +32,7 @@ export default function Pokedex() {
     }
   };
 
+  // Get pokemons
   useEffect(() => {
     const getPokemons = async () => {
       const pokeApiResponse = await fetch(url)
@@ -50,7 +53,9 @@ export default function Pokedex() {
     }
   }, [pokemons, url]);
 
+  // Manage list
   useEffect(() => {
+    // Show 20 pokemons by pages
     const pokeList = () => {
       setPokemonsShow(pokemons.slice(index, index + listByPage));
     };
@@ -58,8 +63,22 @@ export default function Pokedex() {
     if (pokemons.length === urlLimit) {
       pokeList();
     }
-  }, [index, pokemons]);
 
+    // Search a pokemon in list
+    const changeList = () => {
+      const pokeFilter: Pokemon[] = pokemons.filter((pokemon: Pokemon) =>
+        pokemon.name.toLowerCase().includes(inputSearch.toLowerCase())
+      );
+      setPokemonsShow(pokeFilter);
+    };
+
+    if (inputSearch !== "") {
+      changeList()
+    }
+
+  }, [index, inputSearch, pokemons]);
+
+  
   return (
     <>
       <Head>
@@ -68,11 +87,18 @@ export default function Pokedex() {
 
       <h1>Hello, PokedexApp!</h1>
 
+      <Input inputSearch={ inputSearch } setInputSearch={setInputSearch} />
+
+      { inputSearch }
+
+      {
+        pokemonsShow.length > 20 ? "" : <div>
+          <button onClick={prevPage}>Prev</button>
+          <button onClick={nextPage}>Next</button>
+        </div>
+      }
+      
       <CardList pokemons={pokemonsShow} />
-      <div>
-        <button onClick={prevPage}>Prev</button>
-        <button onClick={nextPage}>Next</button>
-      </div>
     </>
   );
 }
