@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Head from "next/head";
 import CardList from "../components/CardList/CardList";
-import type { Pokemon } from "../interface";
+import type { PokemonType } from "../interface";
 import Input from "../components/Input/Input";
 
 interface PokeApi {
@@ -10,8 +10,8 @@ interface PokeApi {
 }
 
 export default function Pokedex() {
-  const [pokemons, setPokemons] = useState<Pokemon[]>([]);
-  const [pokemonsShow, setPokemonsShow] = useState<Pokemon[]>([]);
+  const [pokemons, setPokemons] = useState<PokemonType[]>([]);
+  const [pokemonsShow, setPokemonsShow] = useState<PokemonType[]>([]);
   const [inputSearch, setInputSearch] = useState('');
   const [index, setIndex] = useState(0);
   const urlLimit = 150;
@@ -66,7 +66,7 @@ export default function Pokedex() {
 
     // Search a pokemon in list
     const changeList = () => {
-      const pokeFilter: Pokemon[] = pokemons.filter((pokemon: Pokemon) =>
+      const pokeFilter: PokemonType[] = pokemons.filter((pokemon: PokemonType) =>
         pokemon.name.toLowerCase().includes(inputSearch.toLowerCase())
       );
       setPokemonsShow(pokeFilter);

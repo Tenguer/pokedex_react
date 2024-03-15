@@ -1,9 +1,9 @@
 import PokeCard from "../PokeCard/PokeCard";
 import style from "./CardList.module.css";
-import type { Pokemon } from "../../interface";
+import type { PokemonType } from "../../interface";
 
 type CardListProps = {
-  pokemons: Pokemon[];
+  pokemons: PokemonType[];
 };
 
 export default function CardList({ pokemons }: CardListProps) {
