@@ -29,7 +29,7 @@ export default function Pokedex() {
   const nextPage = () => {
     if (index + listByPage <= urlLimit) {
       setIndex(index + listByPage);
-    }
+    };
   };
 
   // Get pokemons
