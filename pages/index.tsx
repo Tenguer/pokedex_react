@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { InferGetServerSidePropsType, GetServerSideProps } from 'next'
 import Head from "next/head";
 import CardList from "../components/CardList/CardList";
 import type { PokemonType } from "../interface";
@@ -9,14 +10,39 @@ interface PokeApi {
   url: string;
 }
 
-export default function Pokedex() {
-  const [pokemons, setPokemons] = useState<PokemonType[]>([]);
+interface PokeApiResult  {
+  count: number;
+  next: string;
+  previous: string | null;
+  results: PokeApi[]
+}
+
+export const getServerSideProps = (async () => {
+  let pokemons: PokemonType[] = []
+  
+  await fetch(`https://pokeapi.co/api/v2/pokemon?limit=150&offset=0`)
+    .then((res) => res.json())
+    .then(async (data: PokeApiResult) => {
+      const promises = data.results.map(async ({url}: PokeApi) => {
+        const response = await fetch(url)
+        return response.json();
+      })
+      const pokemonResult = await Promise.all(promises);
+      pokemons = pokemonResult;
+    })
+    .catch((error) => console.error(error));
+
+  return { props: { pokemons } }
+}) satisfies GetServerSideProps<{ pokemons: PokemonType[] }>
+
+export default function Pokedex({
+  pokemons,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [pokemonsShow, setPokemonsShow] = useState<PokemonType[]>([]);
   const [inputSearch, setInputSearch] = useState('');
   const [index, setIndex] = useState(0);
   const urlLimit = 150;
   const listByPage = 20;
-  const url = `https://pokeapi.co/api/v2/pokemon?limit=${urlLimit}&offset=0`;
 
   const prevPage = () => {
     if (index - listByPage >= 0) {
@@ -32,53 +58,29 @@ export default function Pokedex() {
     }
   };
 
-  // Get pokemons
-  useEffect(() => {
-    const getPokemons = async () => {
-      const pokeApiResponse = await fetch(url)
-        .then((res) => res.json())
-        .then((data) => data.results)
-        .catch((error) => console.error(error));
-
-      pokeApiResponse.forEach(async ({ name }: PokeApi) => {
-        await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
-          .then((res) => res.json())
-          .then((data) => setPokemons((poke) => [...poke, data]))
-          .catch((error) => console.error(error));
-      });
-    };
-
-    if (pokemons.length === 0) {
-      getPokemons();
-    }
-  }, [pokemons, url]);
-
   // Manage list
   useEffect(() => {
-    // Show 20 pokemons by pages
     const pokeList = () => {
       setPokemonsShow(pokemons.slice(index, index + listByPage));
     };
 
-    if (pokemons.length === urlLimit) {
-      pokeList();
-    }
-
-    // Search a pokemon in list
     const changeList = () => {
       const pokeFilter: PokemonType[] = pokemons.filter((pokemon: PokemonType) =>
         pokemon.name.toLowerCase().includes(inputSearch.toLowerCase())
       );
+
       setPokemonsShow(pokeFilter);
     };
+
+    if (pokemons) {
+      pokeList();
+    }
 
     if (inputSearch !== "") {
       changeList()
     }
-
   }, [index, inputSearch, pokemons]);
 
-  
   return (
     <>
       <Head>
